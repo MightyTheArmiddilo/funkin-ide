@@ -1,0 +1,14 @@
+package funkinide.extension;
+
+class Extension
+{
+  public var id:String;
+
+  public var displayName:String;
+
+  public function new(id:String, displayName:String)
+  {
+    this.id = id ?? "unknown";
+    this.displayName = displayName ?? "Unknown Extension";
+  }
+}

@@ -1,0 +1,104 @@
+package funkinide.notification;
+
+import flixel.FlxG;
+
+class NotificationManager
+{
+  static private var _instance:NotificationManager = null;
+  static public var instance(get, set):NotificationManager = null;
+
+  static function get_instance()
+  {
+    if (_instance == null) _instance = new NotificationManager();
+    return _instance;
+  }
+
+  static function set_instance(val:NotificationManager)
+  {
+    return _instance = val;
+  }
+
+  public function new() {}
+
+  public var notifications(default, null):Array<Notification> = [];
+
+  public function newNotif(?subject:String, ?txt:String, ?icon:String, ?time:Float, ?colorData:NotifColorData):Void
+  {
+    var notif = new Notification(subject, txt, icon, time, colorData);
+    notifications.push(notif);
+    FlxG.state.add(notif.sprite);
+    FlxG.state.add(notif.dismissButton);
+  }
+
+  public function newError(?subject:String, ?txt:String, ?icon:String, ?time:Float):Void
+  {
+    newNotif('ERROR: ' + subject, txt, icon, time, {
+        main: 0xFF362222,
+        subject: 0xFFFF9999,
+        txt: 0xFFFFCCCC,
+        border: 0xFFCC6666,
+        dismiss: 0xFFFFFFFF
+      });
+  }
+
+  public function newInfo(?subject:String, ?txt:String, ?icon:String, ?time:Float):Void
+  {
+    newNotif('INFO: ' + subject, txt, icon, time, {
+        main: 0xFF222236,
+        subject: 0xFF9999FF,
+        txt: 0xFFCCCCFF,
+        border: 0xFF6666CC,
+        dismiss: 0xFFFFFFFF
+      });
+  }
+
+  public function update(elapsed:Float)
+  {
+    var i = 0;
+
+    while (i < notifications.length)
+    {
+      if (notifications[i].shouldDelete) {
+        FlxG.state.remove(notifications[i].sprite);
+        FlxG.state.remove(notifications[i].dismissButton);
+        remove(notifications[i]);
+        continue;
+      }
+
+      notifications[i].offset.y = getYOffset(i);
+      i++;
+    }
+
+    for (notif in notifications)
+    {
+      notif.update(elapsed);
+    }
+  }
+
+  public function getYOffset(notif:Int)
+  {
+    var i = 0;
+    var offset = 0;
+    while (i < notifications.length)
+    {
+      if (i > notif)
+      {
+        if (notifications[i].sprite != null)
+          offset += notifications[i].sprite.height + 12;
+      }
+      i++;
+    }
+    return offset;
+  }
+
+  public function remove(notif:Notification)
+  {
+    var index = notifications.indexOf(notif);
+    if (index != -1) notifications.splice(index, 1);
+  }
+
+  public function toString()
+  {
+    return "NotificationManager";
+  }
+}

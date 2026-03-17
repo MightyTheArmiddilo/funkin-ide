@@ -1,0 +1,138 @@
+package funkinide.states;
+
+import funkin.ui.MusicBeatState;
+import funkin.modding.module.Module;
+import funkin.modding.module.ModuleHandler;
+import funkin.input.Cursor;
+import flixel.FlxG;
+import funkin.ui.title.TitleState;
+import funkinide.graphics.GraphicsHandler;
+import funkinide.notification.NotificationManager;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.util.FlxTimer;
+import flixel.FlxSprite;
+using funkin.util.AnsiUtil;
+
+class FunkinIDEState extends MusicBeatState
+{
+  public var allowInput:Bool = true;
+  var notifTest:FlxSprite;
+
+  public function new()
+  {
+    super();
+  }
+
+  override public function create()
+  {
+    super.create();
+
+    trace(' FUNKIN\' IDE '.bold().bg_green() + ' Opened the Funkin\' IDE');
+
+    Cursor.show();
+
+    NotificationManager.instance = new NotificationManager();
+
+    trace(NotificationManager.instance);
+
+    NotificationManager.instance.newNotif('Welcome to the Funkin\' IDE!', 'Hope you enjoy your stay!', Paths.image('funkinIcon'), 4.0);
+  }
+
+  override public function update(elapsed:Float)
+  {
+    NotificationManager.instance.update(elapsed);
+
+    super.update(elapsed);
+
+    if (allowInput)
+    {
+      if (FlxG.keys.pressed.CONTROL && FlxG.keys.pressed.Q)
+      {
+        trace(' FUNKIN\' IDE '.bold().bg_green() + ' Ctrl + Q '.bold() + 'Returning to Title State');
+
+        Cursor.hide();
+        FlxG.switchState(new TitleState());
+      }
+
+      if (FlxG.keys.justPressed.SPACE)
+      {
+        NotificationManager.instance.newNotif('Test', 'This is a test notification!');
+      }
+
+      if (FlxG.keys.justPressed.C)
+      {
+        NotificationManager.instance.newInfo('Test', 'This is an info test!', Paths.image('funkinIcon'));
+      }
+
+      if (FlxG.keys.justPressed.W)
+      {
+        NotificationManager.instance.newError('Test', 'This is an error test!', Paths.image('funkinIcon'));
+      }
+
+      if (FlxG.keys.justPressed.P)
+      {
+        NotificationManager.instance.newNotif('Long Test', 'Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification. Look at this long ass notification.', Paths.image('funkinIcon'));
+      }
+
+      if (FlxG.keys.justPressed.T)
+      {
+        NotificationManager.instance.newNotif('Boyfriend', '    _____\n   /  \\   \\\n <____ \\/\\_|==|\n |  |V|/\\/\\/<|\n<_________/');
+      }
+    }
+  }
+
+  public function toString()
+  {
+    return "FunkinIDEState";
+  }
+}
+
+class FunkinIDEMenuCore extends Module
+{
+  var addedVersion:Bool = false;
+  var modName:String = "Funkin' IDE";
+  var modDescription:String = "Funkin' IDE";
+  var modAssetKey:String = "mc_funkinide";
+
+  var modState:FunkinIDEState = null;
+
+  public function new()
+  {
+    super("FunkinIDEMenuCore", 3);
+  }
+
+  public function addVersion()
+  {
+    var mcHandle:Module = ModuleHandler.getModule("MC_Data");
+
+    if (mcHandle == null)
+    {
+      trace("MenuCore: MC_Data not found!");
+      return;
+    }
+
+    if (mcHandle.versions.indexOf(modName) != -1)
+    {
+      return;
+    }
+
+    modState = new FunkinIDEState();
+
+    mcHandle.addVersion(modName, modAssetKey, modDescription, modState);
+  }
+
+  public override function onStateChangeBegin(event):Void
+  {
+    super.onStateChangeBegin(event);
+
+    addVersion();
+  }
+
+  public override function onCreate(event):Void
+  {
+    super.onCreate(event);
+
+    addVersion();
+  }
+}

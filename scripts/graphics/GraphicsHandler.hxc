@@ -1,0 +1,51 @@
+package funkinide.graphics;
+
+import flixel.FlxSprite;
+import openfl.geom.Matrix;
+import flixel.util.FlxSpriteUtil;
+import flixel.text.FlxText;
+import flixel.text.FlxTextBorderStyle;
+
+class GraphicsHandler
+{
+  public static function makeNotifSprite(subject:String, txt:String, iconPath:String, colorData:NotifColorData = {}):FlxSprite
+  {
+    var flxSprite = new FlxSprite();
+    flxSprite.pixels = makeNotifSpriteGraphic(subject, txt, iconPath, colorData);
+    return flxSprite;
+  }
+
+  public static function makeNotifSpriteGraphic(subject:String, txt:String, iconPath:String, colorData:NotifColorData = {}):BitmapData
+  {
+    if (colorData == null)
+    {
+      colorData = {};
+    }
+    if (colorData.main == null) colorData.main = 0xFF222222;
+    if (colorData.subject == null) colorData.subject = 0xFFFFFFFF;
+    if (colorData.txt == null) colorData.txt = 0xFFFFFFFF;
+    if (colorData.border == null) colorData.border = 0xFFAAAAAA;
+    if (colorData.dismiss == null) colorData.dismiss = 0xFFFFFFFF;
+
+    var flxSprite = new FlxSprite();
+    var icon = new FlxSprite(0, 0, iconPath);
+    var flxText = new FlxText(12, 12, 392, subject, 15);
+    flxText.setFormat(Paths.font("Inconsolata-SemiBold.ttf"), 15, colorData.subject, 'left', FlxTextBorderStyle.OUTLINE, 0xFF000000);
+    var flxText2 = new FlxText(12, 12, 400 - icon.width - 24, txt, 12);
+    flxText2.setFormat(Paths.font("Inconsolata-SemiBold.ttf"), 12, colorData.txt, 'left', FlxTextBorderStyle.OUTLINE, 0xFF000000);
+    var height = Math.max(100, flxText.height + Math.max(flxText2.height, icon.height) + 24);
+    flxSprite.makeGraphic(400, height, 0x00000000, true);
+    FlxSpriteUtil.drawRoundRect(flxSprite, 0, 0, 400, height, 24, 24, colorData.main, { thickness: 1, color: colorData.border });
+    drawOnSprite(flxSprite, icon.pixels, [12, flxText.height + 12]);
+    drawOnSprite(flxSprite, flxText.textField, [12, 12]);
+    drawOnSprite(flxSprite, flxText2.textField, [icon.width + 12, flxText.height + 12]);
+    return flxSprite.pixels;
+  }
+
+  public static function drawOnSprite(sprite:FlxSprite, bitmap:Dynamic, offsets:Array<Float>)
+  {
+    var matrix = new Matrix();
+    matrix.translate(offsets[0], offsets[1]);
+    sprite.pixels.draw(bitmap, matrix);
+  }
+}

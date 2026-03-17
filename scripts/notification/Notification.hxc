@@ -1,0 +1,158 @@
+package funkinide.notification;
+
+import flixel.util.FlxTimer;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.FlxSprite;
+import funkinide.graphics.GraphicsHandler;
+import flixel.FlxG;
+import flixel.text.FlxText;
+import flixel.text.FlxTextBorderStyle;
+import flixel.util.FlxSpriteUtil;
+import funkin.graphics.shaders.AdjustColorShader;
+import flixel.math.FlxPoint;
+import flixel.math.FlxMath;
+import flixel.util.FlxColor;
+import funkinide.IDEUtil;
+import funkin.audio.FunkinSound;
+
+class Notification
+{
+  public var sprite:FlxSprite;
+
+  public var tweenStart:FlxTween;
+  public var timer:FlxTimer;
+  public var tweenEnd:FlxTween;
+
+  public var dismissButton:FlxSprite;
+  public var adjust:AdjustColorShader;
+
+  public var shouldDelete:Bool = false;
+
+  // only the y here does stuff
+  public var offset:FlxPoint = new FlxPoint(0, 0);
+
+  public var colorData:NotifColorData;
+
+  public var subject:String;
+
+  public var manager:NotificationManager;
+
+  public var time:Float;
+
+  function setSubject(val:String)
+  {
+    subject = val;
+    refreshSprite();
+  }
+
+  public var txt:String;
+
+  function setTxt(val:String)
+  {
+    txt = val;
+    refreshSprite();
+  }
+
+  public var iconPath:String;
+
+  function setIconPath(val:String)
+  {
+    iconPath = val;
+    refreshSprite();
+  }
+
+  public function new(?sub:String, ?text:String, ?icon:String, ?secs:Float, ?color:NotifColorData = {}, ?parentManager:NotificationManager)
+  {
+    if (color == null)
+    {
+      color = {};
+    }
+    if (color.main == null) color.main = 0xFF222222;
+    if (color.subject == null) color.subject = 0xFFFFFFFF;
+    if (color.txt == null) color.txt = 0xFFFFFFFF;
+    if (color.border == null) color.border = 0xFFAAAAAA;
+    if (color.dismiss == null) color.dismiss = 0xFFFFFFFF;
+
+    manager = parentManager ?? NotificationManager.instance;
+    time = secs ?? 0;
+    colorData = color;
+    subject = sub ?? '';
+    txt = text ?? '';
+    iconPath = icon;
+    sprite = GraphicsHandler.makeNotifSprite(subject, txt, iconPath, colorData);
+    sprite.setPosition(FlxG.camera.width, FlxG.camera.height - (12 + sprite.height));
+    dismissButton = new FlxSprite();
+    dismissButton.makeGraphic(16, 16, 0x00000000, true);
+    FlxSpriteUtil.drawRoundRect(dismissButton, 0, 0, 16, 16, 4, 4, colorData.main);
+    var xTxt = new FlxText(12, 12, 400, 'x', 16);
+    xTxt.setFormat(Paths.font("Inconsolata-SemiBold.ttf"), 16, colorData.dismiss, 'left', FlxTextBorderStyle.OUTLINE, 0xFF000000);
+    GraphicsHandler.drawOnSprite(dismissButton, xTxt.textField, [1, -4]);
+    adjust = new AdjustColorShader();
+    adjust.brightness = -80.0;
+    dismissButton.setPosition(sprite.x + sprite.width - dismissButton.width - 12, sprite.y + 12);
+    var snd = FunkinSound.playOnce(Paths.sound('notifhi'), 1.0);
+    snd.pitch = FlxG.random.float(1.00, 1.20);
+    tweenStart = FlxTween.tween(sprite, { x: FlxG.camera.width - (12 + sprite.width) }, 0.4, { ease: FlxEase.circOut, onComplete: _ -> {
+      if (time > 0) {
+        timer = new FlxTimer();
+        timer.start(4, _ -> {
+          var snd = FunkinSound.playOnce(Paths.sound('notifbye'), 1.0);
+          snd.pitch = FlxG.random.float(1.00, 1.20);
+          tweenEnd = FlxTween.tween(sprite, { x: FlxG.camera.width }, 0.4, { ease: FlxEase.circIn, onComplete: _ -> {
+            shouldDelete = true;
+            sprite.kill();
+            dismissButton.kill();
+          }});
+        });
+      }
+    }});
+  }
+
+  public function refreshSprite():Void
+  {
+    sprite.pixels = GraphicsHandler.makeNotifSpriteGraphic(subject, txt, iconPath, colorData);
+  }
+
+  public function update(elapsed:Float):Void
+  {
+    if (shouldDelete || sprite == null || dismissButton == null) return;
+    sprite.y = FlxMath.lerp(sprite.y, FlxG.camera.height - (12 + sprite.height) - offset.y, 0.25);
+    dismissButton.setPosition(sprite.x + sprite.width - dismissButton.width - 12, sprite.y + 12);
+
+    if (FlxG.mouse.overlaps(dismissButton) && IDEUtil.getTopSpriteOverlappingMouse() == dismissButton)
+    {
+      dismissButton.shader = adjust;
+
+      if (FlxG.mouse.justPressed)
+      {
+        if (tweenStart != null) tweenStart.cancel();
+        if (timer != null) timer.cancel();
+        var snd = FunkinSound.playOnce(Paths.sound('notifbye'), 1.0);
+        snd.pitch = FlxG.random.float(1.00, 1.20);
+        tweenEnd = FlxTween.tween(sprite, { x: FlxG.camera.width }, 0.4, { ease: FlxEase.circIn, onComplete: _ -> {
+          shouldDelete = true;
+          sprite.kill();
+          dismissButton.kill();
+        }});
+      }
+    }
+    else
+    {
+      dismissButton.shader = null;
+    }
+  }
+}
+
+typedef NotifColorData =
+{
+  var main:FlxColor;
+
+  var subject:FlxColor;
+
+  var txt:FlxColor;
+
+  var border:FlxColor;
+
+  var dismiss:FlxColor;
+}

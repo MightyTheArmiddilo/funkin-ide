@@ -1,0 +1,23 @@
+package funkinide;
+
+import flixel.FlxG;
+
+class IDEUtil
+{
+  public static function getTopSprite()
+  {
+    return FlxG.state.members[FlxG.state.members.length - 1];
+  }
+
+  public static function getTopSpriteOverlappingMouse()
+  {
+    var overlapping = [];
+
+    for (spr in FlxG.state.members)
+    {
+      if (spr != null && FlxG.mouse.overlaps(spr)) overlapping.push(spr);
+    }
+
+    return overlapping[overlapping.length - 1];
+  }
+}

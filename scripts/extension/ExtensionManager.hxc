@@ -1,0 +1,41 @@
+package funkinide.extension;
+
+import haxe.ds.StringMap;
+
+class ExtensionManager
+{
+  static private var _instance:ExtensionManager = null;
+  static public var instance(get, set):ExtensionManager = null;
+
+  static function get_instance()
+  {
+    if (_instance == null) _instance = new ExtensionManager();
+    return _instance;
+  }
+
+  static function set_instance(val:ExtensionManager)
+  {
+    return _instance = val;
+  }
+
+  public function new() {}
+
+  public var extensions:StringMap<ExtensionEntry> = new StringMap();
+
+  public function registerExtension(id:String, extension:Extensions)
+  {
+    extensions[id] = { extension: extension, active: false };
+  }
+
+  public function toString()
+  {
+    return "ExtensionManager";
+  }
+}
+
+typedef ExtensionEntry =
+{
+  var extension:Extension;
+
+  var active:Bool;
+}
