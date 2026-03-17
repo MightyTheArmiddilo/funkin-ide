@@ -90,7 +90,6 @@ class FunkinIDEState extends MusicBeatState
 
 class FunkinIDEMenuCore extends Module
 {
-  var addedVersion:Bool = false;
   var modName:String = "Funkin' IDE";
   var modDescription:String = "Funkin' IDE";
   var modAssetKey:String = "mc_funkinide";
